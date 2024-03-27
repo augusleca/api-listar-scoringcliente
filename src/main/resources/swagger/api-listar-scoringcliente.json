@@ -1,0 +1,168 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "api-listar-scoringcliente",
+    "description": "Permite obtener el scoring de un cliente. Además, se compone de elementos varios de resiliencia y aplica validaciones.",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/v1/utils/informe/nosis-en-solnet/score-nosis": {
+      "get": {
+        "tags": [
+          "Informe"
+        ],
+        "summary": "Listar variables de scoring",
+        "description": "Obtener mediante un CUIT, un canal, un modelo y una campaña el scoring de un cliente",
+        "operationId": "getScoreInforme",
+        "parameters": [
+          {
+            "name": "cuit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "canal",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campana",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoreInformeRequest"
+              },
+              "examples": {
+                "Ejemplo de solicitud": {
+                  "summary": "Ejemplo 1",
+                  "description": "Ejemplo de solicitud",
+                  "value": {
+                    "cuit": "20297187717",
+                    "canal": "OB",
+                    "modelo": "1",
+                    "campana": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Se obtienen las variables de scoring del cliente",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Cuota": 128601,
+                  "CuotaUVA": 0,
+                  "Limite": 500000,
+                  "mensaje": "",
+                  "ingMinimo": 633000,
+                  "ingMaximo": 633000,
+                  "CUIT": "20297187717"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (Fallo alguna validacion de los campos)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests (Demasiadas requests en poco tiempo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable (Error no esperado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorModel": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "description": "Codigo de error particular",
+            "example": "XXXXXXXX"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripcion de error",
+            "example": "Descripcion de error"
+          }
+        },
+        "description": "Respuesta de error de la API"
+      },
+      "ScoreInformeRequest": {
+        "type": "object",
+        "properties": {
+          "cuit": {
+            "type": "string"
+          },
+          "canal": {
+            "type": "string"
+          },
+          "modelo": {
+            "type": "string"
+          },
+          "campana": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    }
+  }
+}

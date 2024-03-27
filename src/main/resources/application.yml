@@ -1,0 +1,144 @@
+# Configuración del servidor
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/htm
+
+spring:
+  application:
+    name: api-listar-scoringcliente
+  profiles:
+    active: dev # carga el application-dev.yml
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher # Para problemas entre versiones sobre Path Matching
+  datasource:
+    url: jdbc:sqlserver://${DB_HOST}:${DB_PORT};databaseName=${DB_DATABASE}; encrypt=true; trustServerCertificate=true;
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      read-only: true #OJO!!!! capaz para escribir hay que poner false capaz
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: none
+
+# Configuración de Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info, metrics
+  metrics:
+    tags:
+      application: api-listar-scoringcliente
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+    diskspace:
+      enabled: true
+    db:
+      enabled: true
+
+# Swagger
+springdoc:
+  api-docs:
+    enabled: true
+
+# Configuracion de Jaeger
+opentracing:
+  jaeger:
+    udp-sender:
+      host: localhost
+      port: 6831
+    const-sampler:
+      decision: true
+    enabled: true
+    log-spans: true
+    service-name: api-listar-scoringcliente
+
+# Configuracion de Resilience4j
+resilience4j:
+  circuitbreaker:
+    circuit-breaker-aspect-order: 1
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 40
+        slowCallRateThreshold: 40
+        permittedNumberOfCallsInHalfOpenState: 1
+        maxWaitDurationInHalfOpenState: 10s
+        waitDurationInOpenState: 10s
+        writableStackTraceEnabled: true
+        minimumNumberOfCalls: 5
+        eventConsumerBufferSize: 10
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+  ratelimiter:
+    configs:
+      default:
+        registerHealthIndicator: true
+        limitForPeriod: 20
+        limitRefreshPeriod: 4s
+        timeoutDuration: 500ms
+  retry:
+    retry-aspect-order: 2
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s
+        ignore-exceptions:
+          - com.bcba.nosisensolnet.errors.exceptions.IErrorException
+          - java.sql.SQLException
+          - org.springframework.dao.DataAccessException
+
+# Propiedades
+properties:
+  version: v1
+  utils:
+    primerasPosiciones: ${PRIMERAS_POSICIONES}
+    casosEspeciales: ${CASOS_ESPECIALES}
+  exceptions:
+    digitoVerificador:
+      codigo: "FVAL0002"
+      descripcion: "Digito Verificador Erroneo (%1)"
+    primerasPosiciones:
+      codigo: "FVAL0008"
+      descripcion: "Numero de Identificacion Tributaria Invalido"
+    longitud:
+      codigo: "FVAL0012"
+      descripcion: "La longitud del campo '%1' debe ser exactamente %2 caracteres"
+    obligatoriedad:
+      codigo: "DATA0001"
+      descripcion: "Campo Obligatorio Inexistente (%1)"
+    tipoDeDato:
+      codigo: "DATA0002"
+      descripcion: "Campo '%1' no respeta el formato '%2'"
+    valorNegativo:
+      codigo: "DATA0003"
+      descripcion: "Campo '%1' contiene datos nulos o invalidos"
+    rateLimiter:
+      codigo: "PROC0001"
+      descripcion: "Superado maximo de intentos en acceso exclusivo a la informacion. Reintentar"
+    circuitBreaker:
+      codigo: "PROC0003"
+      descripcion: "Error severo en procesamiento de operación: se abrio el Circuit Breaker"
+
+## Cuando se pase a gitops, descomentar las lineas siguientes:
+#logging:
+# config: /deployments/config/logback.xml
